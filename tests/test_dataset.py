@@ -1,3 +1,78 @@
+"""Tests for dataset utilities and the YOLODataset class.
+
+Creates ephemeral image/label files in a temporary directory so tests do not
+modify repository data. Validates loading, annotation parsing, tensor shapes,
+and error handling when images are missing.
+"""
+
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+
+import cv2
+import numpy as np
+import pytest
+import torch
+
+from src.dataset import YOLODataset
+from src.dataset_utils import read_yolo_label
+
+
+def _write_image(path: Path, shape=(100, 200, 3)) -> None:
+    arr = np.zeros(shape, dtype=np.uint8)
+    arr[10:40, 20:60] = (255, 255, 255)
+    cv2.imwrite(str(path), cv2.cvtColor(arr, cv2.COLOR_RGB2BGR))
+
+
+def test_dataset_initialization_and_loading():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        base = Path(tmpdir)
+        images = base / "images"
+        labels = base / "labels"
+        images.mkdir()
+        labels.mkdir()
+
+        img_path = images / "000.jpg"
+        lbl_path = labels / "000.txt"
+        _write_image(img_path)
+
+        # write a single YOLO annotation: class 0 centered
+        lbl_path.write_text("0 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+
+        dataset = YOLODataset(image_dir=images, label_dir=labels, class_names=["head", "helmet"])
+        assert len(dataset) > 0
+
+        image, target = dataset[0]
+        # image is an ndarray with 3 channels
+        assert hasattr(image, "shape") and image.shape[2] == 3
+
+        assert "boxes" in target and "labels" in target
+        assert isinstance(target["boxes"], torch.Tensor)
+        assert isinstance(target["labels"], torch.Tensor)
+        assert target["boxes"].ndim == 2 and target["boxes"].shape[1] == 4
+
+
+def test_missing_image_raises():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        base = Path(tmpdir)
+        images = base / "images"
+        labels = base / "labels"
+        images.mkdir()
+        labels.mkdir()
+
+        img_path = images / "000.jpg"
+        lbl_path = labels / "000.txt"
+        _write_image(img_path)
+        lbl_path.write_text("0 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+
+        dataset = YOLODataset(image_dir=images, label_dir=labels)
+
+        # remove image file to simulate missing image
+        img_path.unlink()
+
+        with pytest.raises(FileNotFoundError):
+            _ = dataset[0]
 import tempfile
 import unittest
 from pathlib import Path
