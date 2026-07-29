@@ -1,0 +1,35 @@
+project:
+  name: custom-object-detector
+  version: 0.1.0
+
+dataset:
+  root: data
+  train: data/train
+  valid: data/valid
+  test: data/test
+  yaml_file: data/data.yaml
+
+training:
+  batch_size: 12
+  epochs: 50
+  image_size: 640
+  optimizer: auto
+  learning_rate: 0.001
+  weight_decay: 0.0005
+  workers: 8
+
+model:
+  pretrained_model: yolov8n.pt
+  save_directory: models
+
+inference:
+  confidence_threshold: 0.25
+  iou_threshold: 0.7
+
+system:
+  device: auto
+  random_seed: 42
+
+logging:
+  level: INFO
+  save_logs: true
