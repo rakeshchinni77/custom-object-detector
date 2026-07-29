@@ -1,26 +1,33 @@
 # Python
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
 
-# Virtual environments
+# Virtual Environment
 .venv/
-venv/
-
-# Data and models
-data/
-outputs/
-models/trained/
-
-# Logs
-*.log
 
 # Environment
 .env
 
+# Dataset
+data/
+
+# Model Weights
+models/pretrained/
+models/train/weights/last.pt
+
+# Outputs
+outputs/
+
+# Notebook
+.ipynb_checkpoints/
+
 # VS Code
 .vscode/
 
-# Docker
-docker-compose.override.yml
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
