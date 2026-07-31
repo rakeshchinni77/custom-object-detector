@@ -1,0 +1,168 @@
+# CI workflow to run train, evaluate, and deploy stages for submission.
+# Triggers on pushes and PRs to main and allows manual dispatch.
+name: Submission Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  # Job 1: Train the model using the repository's training script.
+  train:
+    name: Train
+    runs-on: ubuntu-latest
+    steps:
+      # Step: checkout repository so the runner has the code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step: set up Python 3.10 as requested
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # Step: upgrade pip using the exact command requested
+      - name: Upgrade pip
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+
+      # Step: install dependencies using requirements.txt
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements.txt
+
+      # Step: run the training script
+      - name: Run training
+        run: |
+          set -euo pipefail
+          python src/train.py
+
+      # Step: verify that the expected weights file exists after training
+      - name: Verify trained model exists
+        run: |
+          set -euo pipefail
+          if [ ! -f models/train/weights/best.pt ]; then
+            echo "models/train/weights/best.pt not found" >&2
+            exit 1
+          fi
+
+  # Job 2: Evaluate the trained model. Depends on 'train'.
+  evaluate:
+    name: Evaluate
+    runs-on: ubuntu-latest
+    needs: train
+    steps:
+      # Checkout code again in this job
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Setup Python 3.10
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # Upgrade pip as required
+      - name: Upgrade pip
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements.txt
+
+      # Run evaluation script
+      - name: Run evaluation
+        run: |
+          set -euo pipefail
+          python src/evaluate.py
+
+      # Verify outputs/predictions directory was created
+      - name: Verify predictions output
+        run: |
+          set -euo pipefail
+          if [ ! -d outputs/predictions ]; then
+            echo "outputs/predictions not found" >&2
+            exit 1
+          fi
+
+  # Job 3: Deploy the container, smoke-test the running API, then clean up.
+  deploy:
+    name: Deploy (smoke test)
+    runs-on: ubuntu-latest
+    needs: evaluate
+    steps:
+      # Checkout code so Dockerfile and context are available
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Setup Python is not strictly necessary for Docker, but keep for parity
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # Upgrade pip (keeps environments consistent)
+      - name: Upgrade pip
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+
+      # Install dependencies (not required inside Docker build but ensures runner has tools)
+      - name: Install dependencies on runner
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements.txt
+
+      # Build Docker image from repository's Dockerfile
+      - name: Build Docker image
+        run: |
+          set -euo pipefail
+          docker build -t custom-object-detector .
+
+      # Run the Docker container in detached mode exposing port 8000
+      - name: Run container
+        run: |
+          set -euo pipefail
+          docker run -d -p 8000:8000 --name detector custom-object-detector
+
+      # Wait for the server to start and respond on /health with retries
+      - name: Wait for API to become healthy
+        run: |
+          set -euo pipefail
+          echo "Waiting for API at http://localhost:8000/health"
+          success=0
+          for i in {1..30}; do
+            if curl --fail -sS http://localhost:8000/health >/dev/null 2>&1; then
+              success=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$success" -ne 1 ]; then
+            echo "API did not become healthy in time" >&2
+            docker logs detector || true
+            exit 1
+          fi
+
+      # Verify health endpoint returns success and print response
+      - name: Verify health endpoint
+        run: |
+          set -euo pipefail
+          curl -sS http://localhost:8000/health | tee health.json
+
+      # Stop and remove container to clean up
+      - name: Stop and remove container
+        run: |
+          set -euo pipefail
+          docker stop detector || true
+          docker rm detector || true
