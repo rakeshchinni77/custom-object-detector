@@ -1,14 +1,37 @@
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+
+# Virtual environments
 .venv/
 venv/
+
+# Environment files
 .env
-.env.example
-data/
-outputs/
-models/trained/
+
+# Git
 .git/
 .vscode/
-__pycache__/
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Notebook cache
+.ipynb_checkpoints/
+
+# Training artifacts (not needed inside Docker)
+# Keep model weights (models/train/weights/best.pt) but ignore other training outputs
+runs/
+
+# Large dataset - do not include entire dataset in image
+data/
+
+# Generated outputs - do not include runtime outputs in image
+outputs/
+
+# Local logs
+*.log

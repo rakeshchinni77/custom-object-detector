@@ -1,13 +1,14 @@
-version: "3.8"
-
 services:
-  api:
+  object-detector:
     build: .
+    container_name: custom-object-detector
     ports:
       - "8000:8000"
+    restart: unless-stopped
     environment:
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
-      - MODEL_WEIGHTS=models/trained/best.pt
-    volumes:
-      - .:/app
+      - PYTHONUNBUFFERED=1
+    # Do not mount the host filesystem by default; the image contains the model
+    # and application files as requested. Uncomment a volume below for local
+    # development if you want live edits.
+    # volumes:
+    #   - .:/app:delegated

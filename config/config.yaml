@@ -10,7 +10,7 @@ dataset:
   yaml_file: data/data.yaml
 
 training:
-  batch_size: 12
+  batch_size: 16
   epochs: 50
   image_size: 640
   optimizer: auto
