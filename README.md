@@ -298,10 +298,6 @@ pytest
 - **Precision:** 0.6357
 - **Recall:** 0.6116
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 8dfa852 (update readme)
 
 ## License
 
