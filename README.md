@@ -253,31 +253,7 @@ pytest
 - **Precision:** _placeholder_
 - **Recall:** _placeholder_
 
-## Screenshots
 
-### Swagger UI
-
-_A screenshot of the Swagger UI goes here._
-
-### Training Graphs
-
-_A screenshot of training graphs and metrics goes here._
-
-### Prediction Images
-
-_A screenshot of sample prediction images goes here._
-
-### Docker
-
-_A screenshot of the Docker container running successfully goes here._
-
-### GitHub Actions
-
-_A screenshot of the GitHub Actions workflow run goes here._
-
-## Demo Video
-
-Demo video: _YouTube or Loom URL placeholder_
 
 ## License
 
