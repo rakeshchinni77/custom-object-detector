@@ -23,6 +23,51 @@ A production-ready REST API for custom object detection built with YOLOv8, FastA
 - NumPy
 - GitHub Actions
 
+## Architecture Diagram
+
+```text
+Inference Pipeline (Docker)
+  Client Application
+      |
+      | HTTP POST /predict (Image)
+      v
+  FastAPI Server
+      |
+      | Preprocess / Load
+      v
+  Inference Engine
+      |
+      | Postprocess (NMS)
+      v
+  JSON Output
+
+Training Pipeline
+  Raw Dataset (Images & Annotations)
+      |
+      | Split & Augment
+      v
+  Data Loader
+      |
+      | Batches
+      v
+  Training Loop
+   / |  |  \ \
+  /  |  |   \ \
+Pretrained  Config  Data Loader  Validate
+ Weights     File    (Batches)     
+             (yaml)              
+                |                
+                v                
+            Training Loop        
+                |
+                | Calculate Loss & Optimize
+                v
+         Trained Model Weights
+                |
+                v
+          Evaluation Script (mAP)
+```
+
 ## Project Structure
 
 ```text
@@ -248,12 +293,15 @@ pytest
 
 ## Results
 
-- **mAP@0.5:** _placeholder_
-- **mAP@0.5:0.95:** _placeholder_
-- **Precision:** _placeholder_
-- **Recall:** _placeholder_
+- **mAP@0.5:** 0.6244
+- **mAP@0.5:0.95:** 0.4355
+- **Precision:** 0.6357
+- **Recall:** 0.6116
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8dfa852 (update readme)
 
 ## License
 
