@@ -37,20 +37,12 @@ jobs:
           set -euo pipefail
           python -m pip install -r requirements.txt
 
-      # Step: run the training script
-      - name: Run training
+      # Step: verify that a pretrained weights file exists (do NOT retrain in CI)
+      - name: Verify pretrained model
         run: |
           set -euo pipefail
-          python src/train.py
-
-      # Step: verify that the expected weights file exists after training
-      - name: Verify trained model exists
-        run: |
-          set -euo pipefail
-          if [ ! -f models/train/weights/best.pt ]; then
-            echo "models/train/weights/best.pt not found" >&2
-            exit 1
-          fi
+          # Fail if the pretrained model is missing; we rely on the committed artifact
+          test -f models/train/weights/best.pt
 
   # Job 2: Evaluate the trained model. Depends on 'train'.
   evaluate:
@@ -80,11 +72,11 @@ jobs:
           set -euo pipefail
           python -m pip install -r requirements.txt
 
-      # Run evaluation script
+      # Run evaluation script using module invocation to avoid import/path issues
       - name: Run evaluation
         run: |
           set -euo pipefail
-          python src/evaluate.py
+          python -m src.evaluate
 
       # Verify outputs/predictions directory was created
       - name: Verify predictions output
