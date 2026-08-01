@@ -218,6 +218,14 @@ def main() -> None:
     except ConfigError as exc:
         raise RuntimeError(f"Configuration loading failed: {exc}") from exc
 
+    repo_root = _resolve_repo_root()
+    pretrained_model_path = (repo_root / "models" / "train" / "weights" / "best.pt").resolve()
+    if pretrained_model_path.exists():
+        print("Pretrained model already exists. Skipping training.")
+        train_dir = (repo_root / config.model.save_directory / "train").resolve()
+        print_training_summary(config, train_dir, duration_seconds=0.0)
+        return
+
     try:
         model = load_model(config)
     except (FileNotFoundError, RuntimeError) as exc:

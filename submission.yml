@@ -1,7 +1,10 @@
 version: "1.0"
+
 commands:
-  train: "python src/train.py --config config/config.yaml"
-  evaluate: "python src/evaluate.py --config config/config.yaml"
+  train: "python -m src.train"
+
+  evaluate: "python -m src.evaluate"
+
   deploy: |
     docker build -t object-detector .
     docker run -d -p 8000:8000 object-detector
