@@ -18,7 +18,8 @@ jobs:
       # Step: checkout repository so the runner has the code
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        with:
+          lfs: true
       # Step: set up Python 3.10 as requested
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
@@ -53,7 +54,8 @@ jobs:
       # Checkout code again in this job
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        with:
+          lfs: true
       # Setup Python 3.10
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
@@ -96,6 +98,8 @@ jobs:
       # Checkout code so Dockerfile and context are available
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       # Setup Python is not strictly necessary for Docker, but keep for parity
       - name: Set up Python 3.10
